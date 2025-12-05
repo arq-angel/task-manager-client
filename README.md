@@ -1,19 +1,50 @@
 # Task Manager — Client (Vite + React + TypeScript)
 
-This is the frontend of the Task Manager full-stack application.
-Built using **Vite**, **React**, and **TypeScript**, it provides a clean UI for creating, listing, updating, and deleting tasks.
+This is the **frontend** of the Task Manager full-stack application.  
+Built with **Vite + React + TypeScript**, it provides a clean, responsive UI that works like a **mini Trello board**, allowing users to:
+
+- Create tasks
+- Move tasks across status columns (Todo → In Progress → Done)
+- Mark tasks as completed
+- Delete tasks
+- Filter by status
+- Search by title or description
+
+The UI communicates with an Express backend using REST API calls.
 
 ---
 
-## Features
+## Latest Features
 
-- Add new tasks
-- Optional task description
-- Mark tasks as complete/incomplete
-- Delete tasks
+### Kanban Board (Todo / In Progress / Done)
+
+All tasks are grouped into three visual columns.  
+You can change a task’s status using a dropdown.
+
+### Filters & Search
+
+- Filter by **All**, **Todo**, **In Progress**, or **Done**
+- Search tasks by their **title or description**
+
+### Task Controls
+
+- Mark as complete
+- Change status
+- Delete
 - Auto-updating UI
-- Connects to Express backend via REST API
-- Uses environment variables (`VITE_API_URL`)
+
+---
+
+## Screenshots (Coming Soon)
+
+Add screenshots later inside:
+
+```
+/screenshots/
+  board-view.png
+  add-task.png
+  search-filter.png
+```
 
 ---
 
@@ -22,25 +53,24 @@ Built using **Vite**, **React**, and **TypeScript**, it provides a clean UI for 
 ```
 client/
   src/
-    api.ts
-    App.tsx
+    api.ts        # API communication with backend
+    App.tsx       # Main UI – Kanban board + filters + search
     main.tsx
   public/
-  index.html
-  .env
+  .env            # Environment variables (VITE_API_URL)
 ```
 
 ---
 
 ## Environment Variables
 
-Create `.env`:
+Create `.env` in the client root:
 
 ```env
 VITE_API_URL="http://localhost:5000/api"
 ```
 
-When deployed, replace with your production backend URL.
+In production, replace with your deployed backend URL.
 
 ---
 
@@ -53,7 +83,7 @@ npm install
 
 ---
 
-## Running the Development Server
+## Development Server
 
 ```bash
 npm run dev
@@ -65,7 +95,7 @@ Runs on:
 http://localhost:5173
 ```
 
-Frontend expects backend running at:
+Backend must run on:
 
 ```
 http://localhost:5000/api
@@ -79,26 +109,29 @@ http://localhost:5000/api
 npm run build
 ```
 
-Output goes to:
+Build output:
 
 ```
 client/dist
 ```
 
-You can deploy this folder to Netlify, Vercel, or serve it from the backend.
+Deployable to:
+
+- Netlify
+- Vercel
+- GitHub Pages
+- Or served by your backend
 
 ---
 
-## API Usage
+## API Endpoints Used
 
-The UI uses the REST API provided by the server:
-
-- `GET /api/tasks`
-- `POST /api/tasks`
-- `PATCH /api/tasks/:id`
-- `DELETE /api/tasks/:id`
-
-These are configured inside `src/api.ts`.
+| Method | Endpoint         | Purpose                         |
+| ------ | ---------------- | ------------------------------- |
+| GET    | `/api/tasks`     | Fetch all tasks                 |
+| POST   | `/api/tasks`     | Create task                     |
+| PATCH  | `/api/tasks/:id` | Update status, completion, text |
+| DELETE | `/api/tasks/:id` | Delete a task                   |
 
 ---
 
@@ -108,19 +141,21 @@ These are configured inside `src/api.ts`.
 - **TypeScript**
 - **Vite**
 - Fetch API
+- Inline styling (future conversion to Tailwind/Material UI)
 
 ---
 
-## To-Do (Future Improvements)
+## Future Enhancements
 
-- Add authentication
-- Better UI using Tailwind or Material UI
-- Add categories, priorities, and due dates
-- Add drag-and-drop board (Todo / In-Progress / Done)
-- Add offline mode
+- User authentication (JWT)
+- Tailwind styling upgrade
+- Drag-and-drop Kanban
+- Task priorities UI
+- Dark mode
+- Mobile responsive layout
 
 ---
 
 ## Author
 
-Created by **Arjun** as part of a full-stack learning project.
+Built by **Arjun** as part of a full-stack web development learning project.
