@@ -5,9 +5,14 @@ import {
   updateTask,
   deleteTask,
   type Task,
+  registerUser,
+  loginUser,
+  getCurrentuser,
+  type User,
 } from "./api";
 
 type FilterStatus = "all" | Task["status"];
+type AuthMode = "login" | "register";
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -20,38 +25,116 @@ function App() {
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [user, setUser] = useState<User | null>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authName, setAuthName] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // ---------- TASKS LOADING ----------
+
   async function loadTasks() {
     try {
       setLoading(true);
       const data = await fetchTasks();
       setTasks(data);
       setError(null);
-    } catch (err) {
-      setError("Failed to load tasks");
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || "Failed to load tasks");
     } finally {
       setLoading(false);
     }
   }
 
+  // ---------- INIT: TRY LOAD USER + TASKS ----------
+
   useEffect(() => {
-    loadTasks();
+    async function init() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const me = await getCurrentuser();
+        setUser(me);
+        await loadTasks();
+      } catch (err) {
+        console.error("Init auth error:", err);
+        localStorage.removeItem("token");
+        setUser(null);
+        setLoading(false);
+      }
+    }
+
+    init();
   }, []);
+
+  // ---------- AUTH HANDLERS ----------
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+
+    try {
+      const res = await registerUser(authName, authEmail, authPassword);
+      localStorage.setItem("token", res.token);
+      setUser(res.user);
+      setAuthName("");
+      setAuthEmail("");
+      setAuthPassword("");
+      await loadTasks();
+    } catch (err: any) {
+      setAuthError(err?.message || "Registration failed");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+
+    try {
+      const res = await loginUser(authEmail, authPassword);
+      localStorage.setItem("token", res.token);
+      setUser(res.user);
+      setAuthEmail("");
+      setAuthPassword("");
+      await loadTasks();
+    } catch (err: any) {
+      setAuthError(err?.message || "Login failed");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setUser(null);
+    setTasks([]);
+    setError(null);
+  }
+
+  // ---------- TASK HANDLERS ----------
 
   async function handleAddTask(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
 
     try {
-      const newTask = await createTask({
-        title,
-        description,
-      });
-
+      const newTask = await createTask({ title, description });
       setTasks((prev) => [newTask, ...prev]);
       setTitle("");
       setDescription("");
-    } catch (err) {
-      setError("Failed to create task");
+    } catch (err: any) {
+      setError(err?.message || "Failed to create task");
     }
   }
 
@@ -65,8 +148,8 @@ function App() {
       setTasks((prev) =>
         prev.map((t) => (t._id === updated._id ? updated : t))
       );
-    } catch (err) {
-      setError("Failed to update task");
+    } catch (err: any) {
+      setError(err?.message || "Failed to update task");
     }
   }
 
@@ -79,8 +162,8 @@ function App() {
       setTasks((prev) =>
         prev.map((t) => (t._id === updated._id ? updated : t))
       );
-    } catch (err) {
-      setError("Failed to update status");
+    } catch (err: any) {
+      setError(err?.message || "Failed to update status");
     }
   }
 
@@ -88,8 +171,8 @@ function App() {
     try {
       await deleteTask(taskId);
       setTasks((prev) => prev.filter((t) => t._id !== taskId));
-    } catch (err) {
-      setError("Failed to delete task");
+    } catch (err: any) {
+      setError(err?.message || "Failed to delete task");
     }
   }
 
@@ -135,6 +218,183 @@ function App() {
 
   // ---------- RENDER ----------
 
+  // ---------- AUTH SCREEN ----------
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          maxWidth: "420px",
+          margin: "0 auto",
+          padding: "1.5rem",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        }}
+      >
+        <h1 style={{ fontSize: "1.8rem", marginBottom: "0.25rem" }}>
+          Task Manager 🔐
+        </h1>
+        <p style={{ marginTop: 0, marginBottom: "1rem", color: "#6b7280" }}>
+          Login or create an account to manage your tasks.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <button
+            onClick={() => {
+              setAuthMode("login");
+              setAuthError(null);
+            }}
+            style={{
+              flex: 1,
+              padding: "0.4rem 0.6rem",
+              borderRadius: 999,
+              border: authMode === "login" ? "none" : "1px solid #d1d5db",
+              background: authMode === "login" ? "#2563eb" : "white",
+              color: authMode === "login" ? "white" : "#111827",
+              cursor: "pointer",
+              fontWeight: 500,
+            }}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => {
+              setAuthMode("register");
+              setAuthError(null);
+            }}
+            style={{
+              flex: 1,
+              padding: "0.4rem 0.6rem",
+              borderRadius: 999,
+              border: authMode === "register" ? "none" : "1px solid #d1d5db",
+              background: authMode === "register" ? "#2563eb" : "white",
+              color: authMode === "register" ? "white" : "#111827",
+              cursor: "pointer",
+              fontWeight: 500,
+            }}
+          >
+            Register
+          </button>
+        </div>
+
+        {authError && (
+          <p style={{ color: "red", marginBottom: "0.75rem" }}>{authError}</p>
+        )}
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <form
+            onSubmit={authMode === "login" ? handleLogin : handleRegister}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.6rem",
+              padding: "1rem",
+              borderRadius: 8,
+              border: "1px solid #e5e7eb",
+              background: "#f9fafb",
+            }}
+          >
+            {authMode === "register" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label
+                  htmlFor="name"
+                  style={{ fontSize: "0.8rem", color: "#6b7280" }}
+                >
+                  Name (optional)
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={authName}
+                  onChange={(e) => setAuthName(e.target.value)}
+                  style={{
+                    padding: "0.45rem",
+                    borderRadius: 6,
+                    border: "1px solid #d1d5db",
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label
+                htmlFor="email"
+                style={{ fontSize: "0.8rem", color: "#6b7280" }}
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                required
+                style={{
+                  padding: "0.45rem",
+                  borderRadius: 6,
+                  border: "1px solid #d1d5db",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label
+                htmlFor="password"
+                style={{ fontSize: "0.8rem", color: "#6b7280" }}
+              >
+                Password (min 6 characters)
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                required
+                style={{
+                  padding: "0.45rem",
+                  borderRadius: 6,
+                  border: "1px solid #d1d5db",
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              style={{
+                marginTop: "0.5rem",
+                padding: "0.5rem 0.9rem",
+                borderRadius: 6,
+                border: "none",
+                background: "#2563eb",
+                color: "white",
+                fontWeight: 500,
+                cursor: "pointer",
+                opacity: authLoading ? 0.7 : 1,
+              }}
+            >
+              {authLoading
+                ? "Please wait..."
+                : authMode === "login"
+                ? "Login"
+                : "Register"}
+            </button>
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- MAIN APP (AUTHED) ----------
+
   return (
     <div
       style={{
@@ -160,6 +420,30 @@ function App() {
           <p style={{ margin: 0, color: "#6b7280", fontSize: "0.9rem" }}>
             Mini Trello-style board with filters & search.
           </p>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          <span style={{ fontSize: "0.85rem", color: "#4b5563" }}>
+            {user.name ? user.name : user.email}
+          </span>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: "0.3rem 0.7rem",
+              borderRadius: 999,
+              border: "1px solid #d1d5db",
+              background: "white",
+              cursor: "pointer",
+              fontSize: "0.8rem",
+            }}
+          >
+            Logout
+          </button>
         </div>
       </header>
 
