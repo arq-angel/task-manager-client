@@ -1,47 +1,56 @@
-# Task Manager — Client (Vite + React + TypeScript)
+# Task Manager — Client (Vite + React + TypeScript + TailwindCSS)
 
 This is the **frontend** for the Task Manager full-stack application.  
-It supports **JWT authentication**, **per-user tasks**, a **Kanban board layout**, and **search + filtering**.
+It now includes a **beautiful TailwindCSS UI**, authentication (JWT), user-specific tasks, a Kanban board, filters, and search.
 
-Built using **Vite + React + TypeScript**, it communicates with the Express backend via a protected REST API.
+The client communicates with the Express backend over a protected REST API.
 
 ---
 
-## Features
+## Features (Updated)
 
-### Authentication (JWT)
+### Authentication
 
 - Register
 - Login
 - Logout
-- Persisted session using localStorage
-- Protected UI (only visible when logged in)
+- JWT stored in localStorage
+- Protected UI that only appears when logged in
 
 ### User-Specific Tasks
 
-Each user only sees their own tasks, tied via backend JWT auth.
+Each logged-in user only sees their own tasks.
 
-### Kanban Board
+### Kanban Board (Tailwind UI)
 
-Tasks appear in 3 columns:
+Three-column board styled with Tailwind:
 
 - **Todo**
 - **In Progress**
 - **Done**
 
-Users can update task status directly from the dropdown.
+### Task Controls
 
-### Task Actions
-
-- Create task
-- Edit status (todo → in-progress → done)
-- Mark complete
-- Delete
+- Add new tasks
+- Mark tasks as completed
+- Update status (via dropdown)
+- Delete tasks
+- Styled cards with shadows, rounded corners, responsive layout
 
 ### Filters & Search
 
-- Filter by task status
-- Search by title or description
+- Filter by status
+- Real-time search by title/description
+- Tailwind-styled form controls
+
+### Tailwind UI
+
+The entire UI (auth screen + board + tasks + forms) is now styled using:
+
+- TailwindCSS
+- Utility classes
+- Custom scrollbar styling
+- Responsive layout
 
 ---
 
@@ -50,13 +59,16 @@ Users can update task status directly from the dropdown.
 ```
 client/
   src/
-    api.ts          # Handles API requests + JWT
-    App.tsx         # Main UI: auth, kanban, filters
+    api.ts            # Handles API requests + JWT auth
+    App.tsx           # Main UI (Tailwind version)
     main.tsx
+    index.css         # Tailwind imports + global styles
   public/
-  .env              # Environment variables
+  .env
   index.html
   package.json
+  tailwind.config.cjs
+  postcss.config.cjs
   tsconfig.json
   vite.config.ts
 ```
@@ -65,13 +77,53 @@ client/
 
 ## Environment Variables
 
-Create `.env` in your `/client` folder:
+Create:
+
+```
+client/.env
+```
+
+Contents:
 
 ```env
 VITE_API_URL="http://localhost:5000/api"
 ```
 
-When deployed (Netlify/Vercel), replace this URL with your hosted backend.
+Replace with your real backend API URL when deployed.
+
+---
+
+## Tailwind Installation (Already Applied)
+
+Installed packages:
+
+```bash
+npm install -D tailwindcss postcss autoprefixer
+```
+
+Tailwind config:
+
+```js
+// tailwind.config.cjs
+module.exports = {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+};
+```
+
+Global styles:
+
+```css
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-100 text-slate-900;
+}
+```
 
 ---
 
@@ -84,19 +136,19 @@ npm install
 
 ---
 
-## Start Development Server
+## Development
 
 ```bash
 npm run dev
 ```
 
-The app will run at:
+View the app at:
 
 ```
 http://localhost:5173
 ```
 
-The backend **must** be running at:
+Backend must run at:
 
 ```
 http://localhost:5000/api
@@ -110,41 +162,35 @@ http://localhost:5000/api
 npm run build
 ```
 
-Output is generated at:
-
-```
-client/dist
-```
-
-This folder can be deployed to:
+Deploy the `dist/` folder using:
 
 - Netlify
 - Vercel
 - GitHub Pages
-- Or served by the backend
+- Or serve through your Node server
 
 ---
 
-## API Endpoints (Used by Frontend)
+## API Endpoints Used by the Frontend
 
 ### Auth
 
 | Method | Endpoint             | Description          |
 | ------ | -------------------- | -------------------- |
 | POST   | `/api/auth/register` | Create new user      |
-| POST   | `/api/auth/login`    | Log in existing user |
-| GET    | `/api/auth/me`       | Get logged-in user   |
+| POST   | `/api/auth/login`    | Log in user          |
+| GET    | `/api/auth/me`       | Fetch logged-in user |
 
 ### Tasks (Protected)
 
 | Method | Endpoint         | Description      |
 | ------ | ---------------- | ---------------- |
 | GET    | `/api/tasks`     | Get user’s tasks |
-| POST   | `/api/tasks`     | Create a task    |
-| PATCH  | `/api/tasks/:id` | Update a task    |
-| DELETE | `/api/tasks/:id` | Remove a task    |
+| POST   | `/api/tasks`     | Create task      |
+| PATCH  | `/api/tasks/:id` | Update task      |
+| DELETE | `/api/tasks/:id` | Delete task      |
 
-All task requests automatically include:
+All requests send:
 
 ```
 Authorization: Bearer <jwt-token>
@@ -155,26 +201,26 @@ Authorization: Bearer <jwt-token>
 ## Tech Stack
 
 - **React** + **TypeScript**
-- **Vite** (fast dev server + build)
-- **Fetch API**
-- **JWT authentication**
-- **LocalStorage** for token persistence
-- **Inline styling** (easy to migrate to Tailwind)
+- **Vite**
+- **TailwindCSS**
+- Fetch API
+- JWT Authentication
+- LocalStorage token persistence
 
 ---
 
 ## Future Enhancements
 
-- UI redesign using **TailwindCSS** or **Material UI**
-- Drag-and-drop Kanban (like Trello)
-- Task categories, tags, priorities UI
-- Dark mode
-- Toast notifications (success/error)
-- Profile page
+- Drag and drop Kanban (Trello-style)
+- Tailwind dark mode
+- Animations (Framer Motion)
+- Toast notifications (react-hot-toast)
+- User profile page
+- Categories, labels, priorities UI
+- Improved mobile responsiveness
 
 ---
 
 ## Author
 
-Created by **Arjun** as part of a full-stack learning project.  
-Aiming to build production-ready portfolio projects step-by-step.
+Created by **Arjun** as part of a full-stack learning and portfolio-building project.
